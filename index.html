@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>원의 둘레와 넓이 탐구실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 모눈종이 위 실험 노트. 위쪽 차시 탭 → 차시 제목 → (조작 캔버스 | 조작 패널) → 생각해 봐요 */
+:root{
+  --paper:#F5F8FC; --grid:#E1E8F3; --card:#FFFFFF; --ink:#1C2547; --soft:#5B6688; --line:#D3DBEA; --chip:#EDF1F9;
+  --circle:#0E9C88; --circle-fill:rgba(14,156,136,.13); --diam:#E2552B; --rad:#2E6BE0; --gold:#D99A00; --gold-fill:rgba(233,168,0,.22);
+  --good:#1B9455; --bad:#CF3F35;
+  --f-display:"Jua","Gowun Dodum","Malgun Gothic",system-ui,sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11162A; --grid:#1B2240; --card:#192038; --ink:#E6EAF7; --soft:#9AA4C6; --line:#2C3557; --chip:#222A47;
+  --circle:#2CCBB3; --circle-fill:rgba(44,203,179,.16); --diam:#FF7B55; --rad:#77A2FF; --gold:#FFC93D; --gold-fill:rgba(255,201,61,.2);
+  --good:#3FCB83; --bad:#FF6B5E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11162A; --grid:#1B2240; --card:#192038; --ink:#E6EAF7; --soft:#9AA4C6; --line:#2C3557; --chip:#222A47;
+  --circle:#2CCBB3; --circle-fill:rgba(44,203,179,.16); --diam:#FF7B55; --rad:#77A2FF; --gold:#FFC93D; --gold-fill:rgba(255,201,61,.2);
+  --good:#3FCB83; --bad:#FF6B5E; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{flex:none}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4vw,36px);line-height:1.1;margin:0}
+.brand p{margin:2px 0 0;color:var(--soft);font-size:14px}
+.pi-badge{font-family:var(--f-num);font-size:13px;color:var(--soft);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+nav.lessons{display:flex;gap:8px;overflow-x:auto;padding:16px 2px 10px;scrollbar-width:thin}
+nav.lessons button{flex:none;display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:7px 12px 7px 8px;font-family:var(--f-body);font-size:14px;cursor:pointer}
+nav.lessons button .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--chip);font-family:var(--f-num);font-size:12px;font-weight:600}
+nav.lessons button[aria-current="true"]{border-color:var(--circle);background:var(--circle);color:#fff}
+nav.lessons button[aria-current="true"] .n{background:rgba(255,255,255,.25);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--rad);outline-offset:2px}
+.lesson-head{display:flex;gap:16px;align-items:flex-start;margin:14px 0 16px}
+.lesson-head .big{flex:none;font-family:var(--f-display);font-size:44px;line-height:1;color:var(--circle);min-width:54px}
+.lesson-head .big small{display:block;font-family:var(--f-body);font-size:13px;color:var(--soft);margin-top:4px}
+.lesson-head h2{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3.2vw,30px);line-height:1.25;margin:0;text-wrap:balance}
+.lesson-head .goal{margin:6px 0 0;color:var(--soft);font-size:15px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start;margin-bottom:16px}
+@media (max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.card h3{font-family:var(--f-display);font-weight:400;font-size:20px;margin:0 0 8px}
+.stage{padding:10px;position:relative}
+.stage canvas{display:block;width:100%;touch-action:none;border-radius:10px}
+.cap{font-size:14px;color:var(--soft);margin:8px 4px 0}
+.panel{display:flex;flex-direction:column;gap:14px}
+.ctrl label{display:flex;justify-content:space-between;font-size:15px;margin-bottom:4px}
+.ctrl label b{font-family:var(--f-num);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--circle);height:28px}
+.toggles{display:flex;flex-wrap:wrap;gap:6px}
+.toggles label{display:flex;align-items:center;gap:6px;background:var(--chip);border-radius:999px;padding:5px 12px;font-size:14px;cursor:pointer}
+.toggles input{accent-color:var(--circle);width:16px;height:16px}
+.btn{font-family:var(--f-body);font-size:15px;border:none;border-radius:10px;padding:9px 16px;background:var(--circle);color:#fff;cursor:pointer;font-weight:700}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.btn.warm{background:var(--diam)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.num{font-family:var(--f-num)}
+.formula{font-family:var(--f-num);font-size:15px;background:var(--chip);border-radius:10px;padding:10px 12px;line-height:1.8;overflow-x:auto}
+.formula .k{font-family:var(--f-body);font-weight:700}
+.think{background:var(--gold-fill);border-radius:14px;padding:14px 16px;font-size:15px}
+.think b{font-family:var(--f-display);font-weight:400;font-size:18px;display:block;margin-bottom:2px}
+.q{display:flex;flex-direction:column;gap:6px}
+.q p{margin:0}
+.ans{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ans input,.ans select,.fld{font-family:var(--f-num);font-size:16px;width:110px;padding:7px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.fb{font-size:14px;min-height:1.4em}
+.fb.ok{color:var(--good);font-weight:700}
+.fb.no{color:var(--bad)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{font-size:14px}
+.bar .track{height:14px;background:var(--chip);border-radius:7px;overflow:hidden;margin-top:3px}
+.bar .fill{height:100%;border-radius:7px;transition:width .3s}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+td.num,th.num{font-family:var(--f-num)}
+th{font-weight:700;color:var(--soft);font-size:13px}
+.tablebox{overflow-x:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font-family:var(--f-body);font-size:14px;cursor:pointer}
+.chips button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chips button.right{background:var(--good);border-color:var(--good);color:#fff}
+.chips button.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.tabs{display:flex;gap:4px;background:var(--chip);border-radius:12px;padding:4px}
+.tabs button{flex:1;border:none;background:transparent;color:var(--ink);font-family:var(--f-body);font-size:14px;padding:7px 8px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--card);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.stat{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.stat dt{color:var(--soft)}
+.stat dd{margin:0;font-family:var(--f-num);text-align:right}
+.verdict{font-family:var(--f-display);font-size:20px;color:var(--good)}
+.overlay{position:absolute;inset:10px;background:rgba(10,14,32,.72);border-radius:10px;display:grid;place-items:center;padding:16px}
+.overlay .box{background:var(--card);color:var(--ink);border-radius:16px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:10px}
+.overlay h4{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
+.players{display:flex;gap:6px;flex-wrap:wrap}
+.pl{display:flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;background:var(--chip);font-size:14px;border:2px solid transparent}
+.pl.turn{border-color:var(--ink)}
+.pl i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.quiz-q{font-size:19px;line-height:1.5}
+.progress{height:8px;background:var(--chip);border-radius:4px;overflow:hidden}
+.progress div{height:100%;background:var(--circle);transition:width .3s}
+.choice{display:flex;flex-direction:column;gap:6px}
+.choice button{text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 12px;font-family:var(--f-body);font-size:15px;cursor:pointer}
+.choice button.right{border-color:var(--good);background:var(--good);color:#fff}
+.choice button.wrong{border-color:var(--bad);background:var(--bad);color:#fff}
+.pidigits{font-family:var(--f-num);word-break:break-all;font-size:14px;color:var(--soft)}
+footer{color:var(--soft);font-size:13px;margin-top:24px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="19" fill="none" stroke="var(--circle)" stroke-width="4"/><line x1="4" y1="23" x2="42" y2="23" stroke="var(--diam)" stroke-width="3"/><line x1="23" y1="23" x2="36" y2="9.5" stroke="var(--rad)" stroke-width="3"/><circle cx="23" cy="23" r="3" fill="var(--ink)"/></svg>
+      <div><h1>원의 둘레와 넓이 탐구실</h1><p>6학년 2학기 · 5단원 · 직접 움직여 보며 알아내요</p></div>
+    </div>
+    <span class="pi-badge">원주율 = 원주 ÷ 지름 ≈ 3.14</span>
+  </header>
+  <nav class="lessons" id="nav" aria-label="차시"></nav>
+
+  <!-- 1차시 -->
+  <section id="l1" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c1"></canvas><p class="cap">파란 점을 끌어 보세요. 반지름의 길이와 방향이 바뀝니다.</p></div>
+      <div class="panel">
+        <div class="card">
+          <h3>원의 각 부분</h3>
+          <div class="toggles" id="t1">
+            <label><input type="checkbox" data-k="center" checked>중심</label>
+            <label><input type="checkbox" data-k="radius" checked>반지름</label>
+            <label><input type="checkbox" data-k="diam" checked>지름</label>
+            <label><input type="checkbox" data-k="circ" checked>원주(둘레)</label>
+          </div>
+          <div class="ctrl" style="margin-top:12px"><label for="r1">반지름 <b><span id="r1v">4</span> cm</b></label><input type="range" id="r1" min="1" max="8" step="0.5" value="4"></div>
+          <div class="stat"><dt>반지름</dt><dd id="s1r">4 cm</dd><dt>지름</dt><dd id="s1d">8 cm</dd></div>
+        </div>
+        <div class="card q">
+          <p>지름은 반지름의 몇 배인가요?</p>
+          <div class="ans"><input id="a1" type="number" inputmode="decimal" step="any" aria-label="답"><span>배</span><button class="btn" data-check="a1">확인</button></div>
+          <div class="fb" id="a1f"></div>
+        </div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card q">
+        <h3>준비 운동 ① 다각형의 넓이</h3>
+        <p>가로 8 cm, 세로 4 cm인 직사각형의 넓이는 몇 cm²일까요?</p>
+        <div class="ans"><input id="a1b" type="number" inputmode="decimal" step="any" aria-label="답"><span>cm²</span><button class="btn" data-check="a1b">확인</button></div>
+        <div class="fb" id="a1bf"></div>
+      </div>
+      <div class="card q">
+        <h3>준비 운동 ② 소수의 곱셈</h3>
+        <p>3.14 × 3 은 얼마일까요?</p>
+        <div class="ans"><input id="a1c" type="number" inputmode="decimal" step="any" aria-label="답"><button class="btn" data-check="a1c">확인</button></div>
+        <div class="fb" id="a1cf"></div>
+      </div>
+    </div>
+    <div class="think" style="margin-top:16px"><b>생각해 봐요</b>원의 둘레를 <strong>원주</strong>라고 해요. 굴렁쇠, 소고, 맷돌처럼 우리 주변의 둥근 물건에서 원주와 지름을 찾아볼까요?</div>
+  </section>
+
+  <!-- 2차시 -->
+  <section id="l2" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c2"></canvas><p class="cap">원 안의 정육각형과 원 밖의 정사각형으로 원주를 어림해요.</p></div>
+      <div class="panel">
+        <div class="card">
+          <div class="ctrl"><label for="r2">지름 <b><span id="r2v">6</span> cm</b></label><input type="range" id="r2" min="2" max="10" step="1" value="6"></div>
+          <div class="toggles" id="t2" style="margin-bottom:12px">
+            <label><input type="checkbox" data-k="hex" checked>정육각형</label>
+            <label><input type="checkbox" data-k="sq" checked>정사각형</label>
+          </div>
+          <div class="bars" id="bars2"></div>
+        </div>
+        <div class="card q">
+          <p>지름이 4 cm인 원의 원주는 몇 cm보다 길고, 몇 cm보다 짧을까요?</p>
+          <div class="ans"><input id="a2a" type="number" inputmode="decimal" aria-label="더 짧은 길이"><span>cm보다 길고</span></div>
+          <div class="ans"><input id="a2b" type="number" inputmode="decimal" aria-label="더 긴 길이"><span>cm보다 짧아요</span><button class="btn" id="a2chk">확인</button></div>
+          <div class="fb" id="a2f"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card stage" style="margin-bottom:16px">
+      <h3 style="margin:4px 6px 6px">원을 한 바퀴 굴려 원주를 펼쳐 봐요</h3>
+      <canvas id="c2b"></canvas>
+      <div class="row" style="margin:10px 4px 0"><button class="btn" id="roll2">한 바퀴 굴리기</button><button class="btn warm" id="measure2" disabled>지름으로 재 보기</button><button class="btn ghost" id="reset2">처음으로</button></div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>원의 지름이 길어지면 원주는 어떻게 될까요? 원주는 지름의 몇 배쯤인지 친구와 이야기해 보세요.</div>
+  </section>
+
+  <!-- 3차시 -->
+  <section id="l3" class="lesson" hidden>
+    <div class="card stage" style="margin-bottom:16px">
+      <h3 style="margin:4px 6px 6px">줄자 위에서 굴려 원주 재기</h3>
+      <div class="chips" id="obj3" style="margin:0 6px 10px"></div>
+      <canvas id="c3"></canvas>
+      <p class="cap" id="cap3">물건을 고르면 줄자 위에서 한 바퀴 굴러가요. 잰 값은 표에 기록됩니다.</p>
+    </div>
+    <div class="lab">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <h3 style="margin:0">측정 기록</h3>
+          <label class="row" style="font-size:14px">원주 ÷ 지름
+            <select id="round3" class="fld" style="width:auto">
+              <option value="raw">계산기 그대로</option>
+              <option value="1">소수 첫째 자리까지</option>
+              <option value="2" selected>소수 둘째 자리까지</option>
+            </select></label>
+        </div>
+        <div class="tablebox"><table><thead><tr><th>물건</th><th class="num">원주 (cm)</th><th class="num">지름 (cm)</th><th class="num">원주 ÷ 지름</th><th></th></tr></thead><tbody id="tb3"></tbody></table></div>
+        <div class="row" style="margin-top:12px">
+          <input id="in3n" class="fld" style="width:110px;font-family:var(--f-body)" placeholder="내 물건" aria-label="물건 이름">
+          <input id="in3c" class="fld" type="number" inputmode="decimal" step="any" placeholder="원주" aria-label="원주">
+          <input id="in3d" class="fld" type="number" inputmode="decimal" step="any" placeholder="지름" aria-label="지름">
+          <button class="btn ghost" id="add3">직접 잰 값 추가</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="card stage"><canvas id="c3b"></canvas><div class="toggles" style="margin:8px 4px 0"><label><input type="checkbox" id="line3">원주 = 지름 × 3.14 선 보기</label></div></div>
+        <div class="card" id="concl3"></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>작은 동전과 큰 수레바퀴의 (원주) ÷ (지름)을 비교해 보세요. 원의 크기가 달라도 비슷한 값이 나오나요?</div>
+  </section>
+
+  <!-- 4차시 -->
+  <section id="l4" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c4"></canvas>
+        <div class="row" style="margin:10px 4px 0"><button class="btn" id="roll4">굴렁쇠 굴리기</button><button class="btn ghost" id="reset4">처음으로</button></div></div>
+      <div class="panel">
+        <div class="card">
+          <div class="ctrl"><label for="r4">굴렁쇠 지름 <b><span id="r4v">60</span> cm</b></label><input type="range" id="r4" min="20" max="100" step="10" value="60"></div>
+          <div class="ctrl"><label for="n4">굴리는 바퀴 수 <b><span id="n4v">1</span> 바퀴</b></label><input type="range" id="n4" min="1" max="5" step="1" value="1"></div>
+          <div class="formula" id="f4"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h3>연습하기</h3>
+      <div class="tabs" id="mode4" style="max-width:420px;margin-bottom:12px"><button class="on" data-m="c">지름 → 원주</button><button data-m="d">원주 → 지름</button><button data-m="r">반지름 → 원주</button></div>
+      <div class="q">
+        <p id="q4" class="quiz-q"></p>
+        <div class="ans"><input id="a4" type="number" inputmode="decimal" step="any" aria-label="답"><span>cm</span><button class="btn" id="chk4">확인</button><button class="btn ghost" id="new4">새 문제</button></div>
+        <div class="fb" id="a4f"></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>(원주) = (지름) × (원주율) 이라면, 원주를 알 때 지름은 어떻게 구할 수 있을까요? 전통 가옥의 둥근 기둥 둘레가 91.06 cm라면 지름은?</div>
+  </section>
+
+  <!-- 5차시 -->
+  <section id="l5" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c5"></canvas><p class="cap">모눈 한 칸은 1 cm². <b>직접 세기</b>를 켜면 칸을 눌러 표시할 수 있어요.</p></div>
+      <div class="panel">
+        <div class="card">
+          <div class="ctrl"><label for="r5">반지름 <b><span id="r5v">6</span> cm</b></label><input type="range" id="r5" min="3" max="10" step="1" value="6"></div>
+          <div class="toggles" id="t5">
+            <label><input type="checkbox" data-k="inner" checked>안쪽 정사각형</label>
+            <label><input type="checkbox" data-k="outer" checked>바깥 정사각형</label>
+            <label><input type="checkbox" data-k="cells">모눈 색칠</label>
+            <label><input type="checkbox" data-k="manual">직접 세기</label>
+          </div>
+        </div>
+        <div class="card"><h3>어림해 보면</h3><dl class="stat" id="s5"></dl><div class="fb" id="m5"></div></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>원의 넓이는 안쪽 정사각형보다 크고 바깥 정사각형보다 작아요. 두 넓이 사이의 어느 쯤일까요? 반지름이 6 cm일 때 72 cm²와 144 cm² 중 어느 쪽에 더 가까운가요?</div>
+  </section>
+
+  <!-- 6차시 -->
+  <section id="l6" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c6"></canvas>
+        <div class="row" style="margin:10px 4px 0"><button class="btn" id="play6">잘라서 펼치기</button><button class="btn ghost" id="back6">원으로 되돌리기</button></div></div>
+      <div class="panel">
+        <div class="card">
+          <div class="ctrl"><label for="n6">자른 조각 수 <b><span id="n6v">16</span> 조각</b></label><input type="range" id="n6" min="0" max="5" step="1" value="2"></div>
+          <div class="ctrl"><label for="u6">펼치기 <b><span id="u6v">0</span>%</b></label><input type="range" id="u6" min="0" max="100" step="1" value="0"></div>
+          <p class="cap" style="margin:0">조각을 많이 할수록 어떤 도형에 가까워지나요?</p>
+        </div>
+        <div class="card q">
+          <p>잘라 붙인 도형이 직사각형이 되면, 가로와 세로는 원의 무엇과 같을까요?</p>
+          <div class="ans"><span>가로 =</span><select id="a6w" class="fld" style="width:auto"><option value="">고르기</option><option value="d">지름</option><option value="r">반지름</option><option value="c">원주</option><option value="h">원주 × ½</option></select></div>
+          <div class="ans"><span>세로 =</span><select id="a6h" class="fld" style="width:auto"><option value="">고르기</option><option value="d">지름</option><option value="r">반지름</option><option value="c">원주</option><option value="h">원주 × ½</option></select><button class="btn" id="chk6">확인</button></div>
+          <div class="fb" id="a6f"></div>
+        </div>
+      </div>
+    </div>
+    <div class="two" style="margin-bottom:16px">
+      <div class="card">
+        <h3>원의 넓이 계산기</h3>
+        <div class="ans"><span>반지름</span><input id="in6" type="number" inputmode="decimal" step="any" value="16" aria-label="반지름"><span>cm</span></div>
+        <div class="formula" id="f6" style="margin-top:10px"></div>
+      </div>
+      <div class="card q">
+        <h3>연습하기</h3>
+        <p id="q6" class="quiz-q"></p>
+        <div class="ans"><input id="a6" type="number" inputmode="decimal" step="any" aria-label="답"><span>cm²</span><button class="btn" id="chk6b">확인</button><button class="btn ghost" id="new6">새 문제</button></div>
+        <div class="fb" id="a6bf"></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>씨름 경기장처럼 원 모양인 곳의 넓이를 구하려면 무엇만 알면 될까요? 지름만 알 때는 어떻게 하면 될까요?</div>
+  </section>
+
+  <!-- 7차시 -->
+  <section id="l7" class="lesson" hidden>
+    <div class="tabs" id="shape7" style="max-width:520px;margin-bottom:14px"><button class="on" data-s="ring">꽃밭 (두 원)</button><button data-s="sq">정사각형 속 원</button><button data-s="track">운동장 트랙</button></div>
+    <div class="lab">
+      <div class="card stage"><canvas id="c7"></canvas><p class="cap" id="cap7"></p></div>
+      <div class="panel">
+        <div class="card" id="ctrl7"></div>
+        <div class="card q">
+          <p>색칠한 부분의 둘레와 넓이를 구해 보세요. (원주율 3.14)</p>
+          <div class="ans"><span style="width:44px">둘레</span><input id="a7p" type="number" inputmode="decimal" step="any" aria-label="둘레"><span id="u7p">m</span></div>
+          <div class="ans"><span style="width:44px">넓이</span><input id="a7a" type="number" inputmode="decimal" step="any" aria-label="넓이"><span id="u7a">m²</span></div>
+          <div class="row"><button class="btn" id="chk7">확인</button><button class="btn ghost" id="sol7">풀이 보기</button></div>
+          <div class="fb" id="a7f"></div>
+          <div class="formula" id="f7" hidden></div>
+        </div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>둘레는 <strong>바깥 선과 안쪽 선을 모두</strong> 더해야 해요. 넓이는 큰 도형에서 빈 부분을 빼면 되겠죠?</div>
+  </section>
+
+  <!-- 8차시 -->
+  <section id="l8" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage" id="stage8"><canvas id="c8"></canvas>
+        <div class="overlay" id="ov8"><div class="box" id="ovbox8"></div></div></div>
+      <div class="panel">
+        <div class="card">
+          <h3>놀이 방법</h3>
+          <ol style="margin:0;padding-left:20px;font-size:15px">
+            <li>아래쪽 혜성을 뒤로 끌었다 놓아 튕겨요.</li>
+            <li>혜성이 멈춘 행성의 원주나 넓이를 구해요.</li>
+            <li>맞히면 그 행성은 내 색으로 칠해져요.</li>
+            <li>행성을 모두 칠하면 끝! 많이 칠한 사람이 이겨요.</li>
+          </ol>
+        </div>
+        <div class="card"><div class="players" id="pl8"></div><p class="fb" id="msg8" style="margin-top:8px"></p><button class="btn ghost" id="new8">새 판 시작</button></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>행성에 반지름이 적혀 있을 때와 지름이 적혀 있을 때, 계산이 어떻게 달라지나요?</div>
+  </section>
+
+  <!-- 9차시 -->
+  <section id="l9" class="lesson" hidden>
+    <div class="lab">
+      <div class="card stage"><canvas id="c9"></canvas><p class="cap">두 시루떡의 높이는 같아요. 윗면의 넓이로 비교해 봅시다.</p></div>
+      <div class="panel">
+        <div class="card">
+          <h3>원 모양 시루떡</h3>
+          <div class="ctrl"><label for="d9">지름 <b><span id="d9v">18</span> cm</b></label><input type="range" id="d9" min="10" max="30" step="1" value="18"></div>
+          <div class="ans"><span>가격</span><input id="p9a" type="number" inputmode="numeric" value="8400" aria-label="원 모양 가격" style="width:120px"><span>원</span></div>
+        </div>
+        <div class="card">
+          <h3>정사각형 모양 시루떡</h3>
+          <div class="ctrl"><label for="s9">한 변 <b><span id="s9v">16</span> cm</b></label><input type="range" id="s9" min="10" max="30" step="1" value="16"></div>
+          <div class="ans"><span>가격</span><input id="p9b" type="number" inputmode="numeric" value="9500" aria-label="정사각형 모양 가격" style="width:120px"><span>원</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="two" style="margin-bottom:16px">
+      <div class="card"><h3>1 cm²당 가격 비교</h3><div class="tablebox"><table><thead><tr><th>떡</th><th class="num">넓이 (cm²)</th><th class="num">가격 (원)</th><th class="num">1 cm²당</th></tr></thead><tbody id="tb9"></tbody></table></div><p class="verdict" id="v9"></p></div>
+      <div class="card q">
+        <h3>필요 없는 정보 찾기</h3>
+        <p>반지름이 10 cm이고 둘레가 62.8 cm인 원 모양의 떡케이크가 있어요. 윗면의 넓이 1 cm²당 50원으로 가격을 정해요.</p>
+        <p style="font-size:14px;color:var(--soft)">가격을 구하는 데 필요 없는 정보를 눌러 보세요.</p>
+        <div class="chips" id="info9"><button data-ok="0">반지름 10 cm</button><button data-ok="1">둘레 62.8 cm</button><button data-ok="0">1 cm²당 50원</button></div>
+        <div class="fb" id="i9f"></div>
+        <div class="ans"><span>떡케이크 가격</span><input id="a9" type="number" inputmode="numeric" aria-label="떡케이크 가격" style="width:120px"><span>원</span><button class="btn" data-check="a9">확인</button></div>
+        <div class="fb" id="a9f"></div>
+      </div>
+    </div>
+    <div class="think"><b>생각해 봐요</b>모양은 다른데 크기가 비슷하고 가격이 다르다면, 어느 떡이 더 저렴한지 어떻게 판단할 수 있을까요?</div>
+  </section>
+
+  <!-- 10차시 -->
+  <section id="l10" class="lesson" hidden>
+    <div class="lab">
+      <div class="card" id="quiz10"></div>
+      <div class="panel">
+        <div class="card">
+          <h3>꼭 기억해요</h3>
+          <div class="formula">
+            <div><span class="k">원주율</span> = 원주 ÷ 지름 ≈ 3.14</div>
+            <div><span class="k">원주</span> = 지름 × 원주율</div>
+            <div><span class="k">지름</span> = 원주 ÷ 원주율</div>
+            <div><span class="k">원의 넓이</span> = 반지름 × 반지름 × 원주율</div>
+          </div>
+        </div>
+        <div class="card"><h3>내 기록</h3><dl class="stat" id="rec10"></dl></div>
+      </div>
+    </div>
+    <div class="think"><b>다음 단원 미리 보기</b>6단원에서는 원을 이용해 만든 입체도형인 원기둥, 원뿔, 구를 배워요.</div>
+  </section>
+
+  <footer>『수학』 106~125쪽, 『수학익힘』 78~93쪽 활동을 바탕으로 만들었어요. 계산에서는 원주율을 3.14로 씁니다.</footer>
+</div>
+
+<script>
+(function(){
+const PI = 3.14;
+const $ = id => document.getElementById(id);
+const r2 = x => Math.round(x * 10000) / 10000;
+const fmt = x => String(r2(x));
+const won = x => Math.round(x).toLocaleString('ko-KR');
+const near = (a, b) => Math.abs(a - b) < 0.011;
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- 색 ---------- */
+let C = {};
+function readColors(){
+  const s = getComputedStyle(document.documentElement);
+  ['paper','grid','card','ink','soft','line','chip','circle','circle-fill','diam','rad','gold','gold-fill','good','bad']
+    .forEach(k => C[k.replace('-f','F')] = s.getPropertyValue('--' + k).trim());
+}
+readColors();
+
+/* ---------- 캔버스 ---------- */
+const canvases = [];
+function makeCanvas(id, aspect, draw, maxH){
+  const cv = $(id), ctx = cv.getContext('2d');
+  const o = { cv, ctx, W: 0, H: 0, draw: () => { if (o.W) draw(o); } };
+  o.resize = () => {
+    const w = cv.parentElement.clientWidth - 20;
+    if (w < 120) return;
+    let h = w * aspect; if (maxH) h = Math.min(h, maxH);
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); o.W = w; o.H = h; o.draw();
+  };
+  new ResizeObserver(o.resize).observe(cv.parentElement);
+  canvases.push(o);
+  return o;
+}
+function pos(e, cv){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function redrawAll(){ readColors(); canvases.forEach(o => o.W && o.draw()); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function txt(ctx, s, x, y, col, size, align, weight){
+  ctx.fillStyle = col; ctx.font = (weight || '') + ' ' + (size || 14) + 'px "Gowun Dodum","Malgun Gothic",sans-serif';
+  ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
+}
+function numTxt(ctx, s, x, y, col, size, align){
+  ctx.fillStyle = col; ctx.font = '600 ' + (size || 13) + 'px "IBM Plex Mono",Consolas,monospace';
+  ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
+}
+function pill(ctx, s, x, y, bg, fg, size){
+  size = size || 13;
+  ctx.font = '700 ' + size + 'px "Gowun Dodum","Malgun Gothic",sans-serif';
+  const w = ctx.measureText(s).width + 14, h = size + 10;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill();
+  txt(ctx, s, x, y + 1, fg, size, 'center', '700');
+}
+function animate(ms, frame, done){
+  if (reduceMotion) ms = Math.min(ms, 200);
+  const t0 = performance.now(); let stop = false;
+  function step(now){ if (stop) return; const p = Math.min(1, (now - t0) / ms); frame(p); if (p < 1) requestAnimationFrame(step); else if (done) done(); }
+  requestAnimationFrame(step);
+  return () => { stop = true; };
+}
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
+/* ---------- 정답 확인 ---------- */
+function check(inp, fb, ans, sol){
+  const v = parseFloat(String(inp.value).replace(/,/g, ''));
+  if (isNaN(v)) { fb.className = 'fb no'; fb.textContent = '수를 입력해 보세요.'; return false; }
+  if (near(v, ans)) { fb.className = 'fb ok'; fb.textContent = '정답이에요! ' + (sol || ''); inp.dataset.tries = 0; return true; }
+  const t = (+inp.dataset.tries || 0) + 1; inp.dataset.tries = t;
+  fb.className = 'fb no';
+  fb.textContent = t >= 2 && sol ? '아쉬워요. 풀이: ' + sol : '다시 생각해 봐요.';
+  return false;
+}
+const fixedAnswers = {
+  a1: [2, '지름 = 반지름 × 2'], a1b: [32, '8 × 4 = 32'], a1c: [9.42, '3.14 × 3 = 9.42'],
+  a9: [15700, '10 × 10 × 3.14 = 314, 314 × 50 = 15700']
+};
+document.querySelectorAll('[data-check]').forEach(b => {
+  const id = b.dataset.check;
+  b.addEventListener('click', () => check($(id), $(id + 'f'), fixedAnswers[id][0], fixedAnswers[id][1]));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('.ans input')) {
+    const btn = e.target.closest('.q, .card').querySelector('.btn:not(.ghost)'); if (btn) btn.click();
+  }
+});
+
+/* ---------- 차시 이동 ---------- */
+const LESSONS = [
+  ['원 살펴보기', '원의 둘레와 넓이는 어떻게 알 수 있을까요?', '원의 중심, 반지름, 지름, 원주를 알고 단원에서 배울 내용을 살펴봅니다.'],
+  ['원주와 지름', '그릇의 지름이 길어지면 둘레는 어떻게 달라질까?', '원주와 지름의 관계를 탐구하고 설명할 수 있습니다.'],
+  ['원주율', '수레바퀴의 원주는 지름의 몇 배일까?', '지름에 대한 원주의 비율을 구하고, 그것이 원주율임을 설명할 수 있습니다.'],
+  ['원주·지름 구하기', '굴렁쇠가 움직인 거리를 구해 볼까?', '원주율을 이용하여 원주와 지름을 구할 수 있습니다.'],
+  ['넓이 어림하기', '과녁판의 넓이는 얼마일까?', '정사각형과 모눈을 이용하여 원의 넓이를 어림할 수 있습니다.'],
+  ['넓이 구하기', '씨름 경기장의 넓이는 얼마일까?', '원의 넓이를 구하는 방법을 이해하고 설명할 수 있습니다.'],
+  ['둘레·넓이 활용', '꽃밭의 둘레와 넓이는 얼마일까?', '원주와 원의 넓이를 이용하여 여러 모양의 둘레와 넓이를 구할 수 있습니다.'],
+  ['수학 놀이', '내 행성을 찾아라!', '원주와 원의 넓이를 구하며 친구와 놀이를 할 수 있습니다.'],
+  ['떡 고르기', '어떤 떡을 고를까?', '원의 넓이를 이용하여 생활 속 문제를 해결할 수 있습니다.'],
+  ['단원 정리', '배운 내용을 확인해요!', '여러 문제를 풀며 단원에서 배운 내용을 정리합니다.']
+];
+const nav = $('nav');
+LESSONS.forEach((l, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = '<span class="n">' + (i + 1) + '</span>' + l[0];
+  b.addEventListener('click', () => show(i + 1, true));
+  nav.appendChild(b);
+  const sec = $('l' + (i + 1));
+  const head = document.createElement('div'); head.className = 'lesson-head';
+  head.innerHTML = '<div class="big">' + (i + 1) + '<small>차시</small></div><div><h2>' + l[1] + '</h2><p class="goal">' + l[2] + '</p></div>';
+  sec.prepend(head);
+});
+function show(n, push){
+  document.querySelectorAll('.lesson').forEach(s => s.hidden = s.id !== 'l' + n);
+  [...nav.children].forEach((b, i) => b.setAttribute('aria-current', i + 1 === n ? 'true' : 'false'));
+  nav.children[n - 1].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  if (push) { history.replaceState(null, '', '#l' + n); window.scrollTo({ top: 0 }); }
+  try { localStorage.setItem('circle-lab-lesson', n); } catch (e) {}
+  requestAnimationFrame(() => canvases.forEach(o => o.resize()));
+}
+
+/* =========================================================
+   1차시 : 원의 각 부분
+   ========================================================= */
+const s1 = { r: 4, ang: -0.7, show: { center: 1, radius: 1, diam: 1, circ: 1 }, drag: false };
+const c1 = makeCanvas('c1', 0.72, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const u = Math.min(W, H) / 19, cx = W / 2, cy = H / 2, R = s1.r * u;
+  o.u = u;
+  ctx.fillStyle = C.circleFill; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+  if (s1.show.circ) {
+    ctx.strokeStyle = C.circle; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+    pill(ctx, '원주 (원의 둘레)', cx + R * 0.72 + 30, cy - R * 0.72 - 14, C.circle, '#fff');
+  } else { ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke(); }
+  const da = s1.ang + Math.PI / 2;
+  if (s1.show.diam) {
+    const dx = Math.cos(da) * R, dy = Math.sin(da) * R;
+    ctx.strokeStyle = C.diam; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx - dx, cy - dy); ctx.lineTo(cx + dx, cy + dy); ctx.stroke();
+    pill(ctx, '지름 ' + fmt(s1.r * 2) + ' cm', cx + dx * 0.55 + 6, cy + dy * 0.55 + 18, C.diam, '#fff');
+  }
+  const hx = cx + Math.cos(s1.ang) * R, hy = cy + Math.sin(s1.ang) * R;
+  if (s1.show.radius) {
+    ctx.strokeStyle = C.rad; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
+    pill(ctx, '반지름 ' + fmt(s1.r) + ' cm', (cx + hx) / 2 - Math.sin(s1.ang) * 18, (cy + hy) / 2 + Math.cos(s1.ang) * 18, C.rad, '#fff');
+  }
+  if (s1.show.center) {
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 7); ctx.fill();
+    txt(ctx, '원의 중심', cx - 4, cy - 18, C.ink, 14, 'right', '700');
+  }
+  ctx.fillStyle = C.rad; ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fill();
+  ctx.strokeStyle = C.card; ctx.lineWidth = 3; ctx.stroke();
+  o.handle = { x: hx, y: hy, cx, cy };
+});
+function set1(r){ s1.r = r; $('r1').value = r; $('r1v').textContent = r; $('s1r').textContent = r + ' cm'; $('s1d').textContent = fmt(r * 2) + ' cm'; c1.draw(); }
+$('r1').addEventListener('input', e => set1(+e.target.value));
+$('t1').addEventListener('change', e => { s1.show[e.target.dataset.k] = e.target.checked; c1.draw(); });
+c1.cv.addEventListener('pointerdown', e => {
+  const p = pos(e, c1.cv), h = c1.handle;
+  if (Math.hypot(p.x - h.x, p.y - h.y) < 30) { s1.drag = true; try { c1.cv.setPointerCapture(e.pointerId); } catch (_) {} }
+});
+c1.cv.addEventListener('pointermove', e => {
+  if (!s1.drag) return; const p = pos(e, c1.cv), h = c1.handle;
+  s1.ang = Math.atan2(p.y - h.cy, p.x - h.cx);
+  set1(Math.max(1, Math.min(8, Math.round(Math.hypot(p.x - h.cx, p.y - h.cy) / c1.u * 2) / 2)));
+});
+c1.cv.addEventListener('pointerup', () => s1.drag = false);
+
+/* =========================================================
+   2차시 : 원주와 지름
+   ========================================================= */
+const s2 = { d: 6, hex: true, sq: true, t: 0, measured: false, stop: null };
+const c2 = makeCanvas('c2', 0.72, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const u = Math.min(W, H) * 0.86 / 10, cx = W / 2, cy = H / 2, R = s2.d / 2 * u;
+  if (s2.sq) {
+    ctx.fillStyle = C.goldF; ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
+    ctx.strokeStyle = C.gold; ctx.lineWidth = 3; ctx.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+  }
+  ctx.fillStyle = C.card; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+  ctx.fillStyle = C.circleF; ctx.fill();
+  ctx.strokeStyle = C.circle; ctx.lineWidth = 4; ctx.stroke();
+  if (s2.hex) {
+    ctx.strokeStyle = C.rad; ctx.lineWidth = 3; ctx.beginPath();
+    for (let i = 0; i <= 6; i++) { const a = i * Math.PI / 3; const x = cx + R * Math.cos(a), y = cy + R * Math.sin(a); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+  }
+  ctx.strokeStyle = C.diam; ctx.lineWidth = 3; ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.stroke(); ctx.setLineDash([]);
+  pill(ctx, '지름 ' + s2.d + ' cm', cx, cy + 16, C.diam, '#fff');
+});
+function bars2(){
+  const d = s2.d, max = 4 * d;
+  const rows = [
+    ['정육각형의 둘레 = 지름 × 3', 3 * d, C.rad, s2.hex],
+    ['원주', r2(d * Math.PI), C.circle, true],
+    ['정사각형의 둘레 = 지름 × 4', 4 * d, C.gold, s2.sq]
+  ];
+  $('bars2').innerHTML = rows.filter(r => r[3]).map(r =>
+    '<div class="bar"><div class="row" style="justify-content:space-between"><span>' + r[0] + '</span><b class="num">' + (r[0] === '원주' ? '약 ' + fmt(Math.round(r[1] * 10) / 10) : r[1]) + ' cm</b></div><div class="track"><div class="fill" style="width:' + (r[1] / max * 100) + '%;background:' + r[2] + '"></div></div></div>'
+  ).join('') + '<p class="cap" style="margin:4px 0 0">(정육각형의 둘레) &lt; (원주) &lt; (정사각형의 둘레)</p>';
+}
+$('r2').addEventListener('input', e => { s2.d = +e.target.value; $('r2v').textContent = s2.d; c2.draw(); bars2(); });
+$('t2').addEventListener('change', e => { s2[e.target.dataset.k] = e.target.checked; c2.draw(); bars2(); });
+bars2();
+$('a2chk').addEventListener('click', () => {
+  const a = +$('a2a').value, b = +$('a2b').value, f = $('a2f');
+  if (a === 12 && b === 16) { f.className = 'fb ok'; f.textContent = '정답! 지름 × 3 = 12 cm보다 길고, 지름 × 4 = 16 cm보다 짧아요.'; }
+  else { f.className = 'fb no'; f.textContent = '정육각형의 둘레(지름 × 3)와 정사각형의 둘레(지름 × 4)를 떠올려 보세요.'; }
+});
+
+const c2b = makeCanvas('c2b', 0.3, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const R = Math.min((W - 70) / (2 * Math.PI), H * 0.36), base = H * 0.82, x0 = 30;
+  const circ = 2 * Math.PI * R, t = s2.t;
+  ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10, base); ctx.lineTo(W - 10, base); ctx.stroke();
+  ctx.strokeStyle = C.circle; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(x0 + circ * t, base); ctx.stroke(); ctx.lineCap = 'butt';
+  if (s2.measured) {
+    const dlen = 2 * R;
+    for (let k = 0; k < 4; k++) {
+      const xs = x0 + k * dlen, xe = Math.min(x0 + (k + 1) * dlen, x0 + circ);
+      if (xs >= x0 + circ) break;
+      ctx.fillStyle = k < 3 ? (k % 2 ? C.diam : C.gold) : C.bad;
+      ctx.globalAlpha = k < 3 ? .85 : 1; ctx.fillRect(xs, base + 6, xe - xs, 10); ctx.globalAlpha = 1;
+      txt(ctx, k < 3 ? '지름 ' + (k + 1) : '조금 더', (xs + xe) / 2 + (k < 3 ? 0 : 18), base + 28, k < 3 ? C.ink : C.bad, 13, 'center', '700');
+    }
+  }
+  const cx = x0 + circ * t, cy = base - R, rot = t * Math.PI * 2;
+  ctx.fillStyle = C.circleF; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+  ctx.strokeStyle = C.circle; ctx.lineWidth = 4; ctx.stroke();
+  ctx.strokeStyle = C.diam; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx - R * Math.sin(rot), cy + R * Math.cos(rot)); ctx.lineTo(cx + R * Math.sin(rot), cy - R * Math.cos(rot)); ctx.stroke();
+  ctx.fillStyle = C.diam; ctx.beginPath(); ctx.arc(cx - R * Math.sin(rot), cy + R * Math.cos(rot), 6, 0, 7); ctx.fill();
+  if (t >= 1) txt(ctx, '원주만큼 펼친 선분', x0 + circ / 2, base - 2 * R - 14 < 12 ? 14 : base - 2 * R - 10, C.circle, 14, 'center', '700');
+});
+$('roll2').addEventListener('click', () => {
+  s2.measured = false; $('measure2').disabled = true; $('roll2').disabled = true;
+  animate(2600, p => { s2.t = ease(p); c2b.draw(); }, () => { $('measure2').disabled = false; $('roll2').disabled = false; });
+});
+$('measure2').addEventListener('click', () => { s2.measured = true; c2b.draw(); });
+$('reset2').addEventListener('click', () => { s2.t = 0; s2.measured = false; $('measure2').disabled = true; c2b.draw(); });
+
+/* =========================================================
+   3차시 : 원주율
+   ========================================================= */
+const OBJS = [['동전', 2.4], ['컵 바닥', 7], ['접시', 18], ['시계', 20], ['소고', 25], ['훌라후프', 80], ['수레바퀴', 90]];
+const s3 = { rows: [{ n: '접시', c: 56.5, d: 18 }], cur: null, t: 0, busy: false };
+const obj3 = $('obj3');
+OBJS.forEach(([n, d]) => {
+  const b = document.createElement('button'); b.textContent = n; b.addEventListener('click', () => roll3(n, d)); obj3.appendChild(b);
+});
+function roll3(n, d){
+  if (s3.busy) return;
+  [...obj3.children].forEach(b => b.classList.toggle('on', b.textContent === n));
+  s3.cur = { n, d }; s3.busy = true;
+  animate(2200, p => { s3.t = ease(p); c3.draw(); }, () => {
+    s3.busy = false;
+    const c = Math.round(Math.PI * d * 10 + rnd(-1, 1)) / 10;
+    s3.cur.c = c;
+    s3.rows.push({ n, c, d });
+    $('cap3').textContent = n + ': 원주를 재었더니 약 ' + c + ' cm, 지름은 ' + d + ' cm였어요. 줄자로 잰 값이라 조금씩 차이가 날 수 있어요.';
+    c3.draw(); table3();
+  });
+}
+function niceStep(x){ const p = Math.pow(10, Math.floor(Math.log10(x))); const m = x / p; return (m < 2 ? 1 : m < 5 ? 2 : 5) * p; }
+const c3 = makeCanvas('c3', 0.3, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const cur = s3.cur || { n: '접시', d: 18 };
+  const R = Math.min((W - 70) / (2 * Math.PI), H * 0.32), base = H * 0.7, x0 = 30, circ = 2 * Math.PI * R;
+  const sc = circ / (Math.PI * cur.d);
+  ctx.fillStyle = C.goldF; ctx.fillRect(x0 - 10, base, Math.min(W - x0, circ + 40), 26);
+  ctx.strokeStyle = C.gold; ctx.lineWidth = 1.5; ctx.strokeRect(x0 - 10, base, Math.min(W - x0, circ + 40), 26);
+  const step = niceStep(Math.PI * cur.d / 8);
+  for (let v = 0; v * sc <= circ + 25; v += step / 2) {
+    const x = x0 + v * sc, major = Math.abs(v / step - Math.round(v / step)) < 1e-6;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base + (major ? 12 : 6)); ctx.stroke();
+    if (major) numTxt(ctx, fmt(v), x, base + 19, C.ink, 10);
+  }
+  txt(ctx, 'cm', x0 + circ + 22, base + 19, C.soft, 11);
+  const t = s3.cur ? s3.t : 0;
+  ctx.strokeStyle = C.circle; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0, base - 2); ctx.lineTo(x0 + circ * t, base - 2); ctx.stroke();
+  const cx = x0 + circ * t, cy = base - R - 2, rot = t * Math.PI * 2;
+  ctx.fillStyle = C.card; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+  ctx.fillStyle = C.circleF; ctx.fill(); ctx.strokeStyle = C.circle; ctx.lineWidth = 4; ctx.stroke();
+  ctx.strokeStyle = C.soft; ctx.lineWidth = 1.5;
+  for (let k = 0; k < 6; k++) { const a = rot + k * Math.PI / 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a)); ctx.stroke(); }
+  ctx.fillStyle = C.diam; ctx.beginPath(); ctx.arc(cx - R * Math.sin(rot), cy + R * Math.cos(rot), 6, 0, 7); ctx.fill();
+  txt(ctx, cur.n + ' (지름 ' + cur.d + ' cm)', cx, cy, C.ink, 14, 'center', '700');
+});
+function ratioText(c, d){
+  const v = c / d, m = $('round3').value;
+  if (m === 'raw') return (Math.floor(v * 100000) / 100000) + (Math.abs(v * 100000 - Math.round(v * 100000)) > 1e-6 ? '…' : '');
+  return v.toFixed(+m);
+}
+function table3(){
+  $('tb3').innerHTML = s3.rows.map((r, i) =>
+    '<tr><td>' + r.n.replace(/</g, '&lt;') + '</td><td class="num">' + r.c + '</td><td class="num">' + r.d + '</td><td class="num"><b>' + ratioText(r.c, r.d) + '</b></td><td><button class="btn ghost" style="padding:2px 8px" data-del="' + i + '" aria-label="지우기">×</button></td></tr>'
+  ).join('');
+  c3b.draw(); concl3();
+}
+$('tb3').addEventListener('click', e => { const i = e.target.dataset.del; if (i !== undefined) { s3.rows.splice(+i, 1); table3(); } });
+$('round3').addEventListener('change', table3);
+$('add3').addEventListener('click', () => {
+  const c = parseFloat($('in3c').value), d = parseFloat($('in3d').value);
+  if (!(c > 0 && d > 0)) { $('in3c').focus(); return; }
+  s3.rows.push({ n: $('in3n').value.trim() || '내 물건', c, d }); $('in3n').value = $('in3c').value = $('in3d').value = ''; table3();
+});
+$('line3').addEventListener('change', () => c3b.draw());
+const c3b = makeCanvas('c3b', 0.78, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const L = 44, B = H - 30, T = 12, Rr = W - 12;
+  const maxD = Math.max(20, ...s3.rows.map(r => r.d)) * 1.1, maxC = maxD * 3.6;
+  const X = d => L + d / maxD * (Rr - L), Y = c => B - c / maxC * (B - T);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  const sx = niceStep(maxD / 5), sy = niceStep(maxC / 5);
+  for (let v = sx; v < maxD; v += sx) { ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), B); ctx.stroke(); numTxt(ctx, fmt(v), X(v), B + 12, C.soft, 10); }
+  for (let v = sy; v < maxC; v += sy) { ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(Rr, Y(v)); ctx.stroke(); numTxt(ctx, fmt(v), L - 6, Y(v), C.soft, 10, 'right'); }
+  ctx.strokeStyle = C.soft; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, B); ctx.lineTo(Rr, B); ctx.stroke();
+  txt(ctx, '지름 (cm) →', Rr, B + 24, C.soft, 11, 'right');
+  txt(ctx, '↑ 원주 (cm)', L + 4, T + 6, C.soft, 11, 'left');
+  if ($('line3').checked) {
+    ctx.strokeStyle = C.diam; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+    const de = Math.min(maxD, maxC / PI); ctx.lineTo(X(de), Y(de * PI)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  s3.rows.forEach(r => { ctx.fillStyle = C.circle; ctx.beginPath(); ctx.arc(X(r.d), Y(r.c), 6, 0, 7); ctx.fill(); ctx.strokeStyle = C.card; ctx.lineWidth = 2; ctx.stroke(); });
+});
+function concl3(){
+  const el = $('concl3'), n = s3.rows.length;
+  if (n < 3) { el.innerHTML = '<h3>발견한 것</h3><p style="margin:0">물건을 <b>' + (3 - n) + '개</b> 더 재어 보면 공통점이 보일 거예요.</p>'; return; }
+  const avg = s3.rows.reduce((a, r) => a + r.c / r.d, 0) / n;
+  el.innerHTML = '<h3>발견한 것</h3><p style="margin:0 0 8px">원의 크기와 상관없이 (원주) ÷ (지름)은 거의 일정해요. 내 기록의 평균은 <b class="num">' + avg.toFixed(3) + '</b>.</p>' +
+    '<p style="margin:0 0 8px">원의 지름에 대한 원주의 비율을 <b>원주율</b>이라고 해요. 원주율은 끝없이 이어지는 소수라서 보통 <b>3.14</b>로 어림해 씁니다.</p>' +
+    '<details><summary style="cursor:pointer">원주율 더 자세히 보기</summary><p class="pidigits">3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651…</p></details>';
+}
+table3();
+
+/* =========================================================
+   4차시 : 굴렁쇠와 원주·지름 구하기
+   ========================================================= */
+const s4 = { d: 60, n: 1, t: 0, busy: false, mode: 'c', q: null };
+const c4 = makeCanvas('c4', 0.42, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const N = s4.n, R = Math.min(H * 0.3, (W - 70) / (2 * Math.PI * N)), base = H * 0.78, x0 = 30, circ = 2 * Math.PI * R;
+  ctx.fillStyle = C.chip; ctx.fillRect(0, base, W, H - base);
+  ctx.strokeStyle = C.soft; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, base); ctx.lineTo(W, base); ctx.stroke();
+  for (let k = 0; k <= N; k++) {
+    const x = x0 + k * circ;
+    ctx.strokeStyle = C.soft; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base + 10); ctx.stroke();
+    if (k) txt(ctx, k + '바퀴', x, base + 22, C.soft, 12);
+  }
+  ctx.strokeStyle = C.diam; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x0, base - 1); ctx.lineTo(x0 + circ * s4.t, base - 1); ctx.stroke();
+  const cx = x0 + circ * s4.t, cy = base - R - 2, rot = s4.t * Math.PI * 2;
+  ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(3, R * 0.09); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+  ctx.fillStyle = C.gold; ctx.beginPath(); ctx.arc(cx + R * Math.cos(rot - Math.PI / 2 + Math.PI), cy + R * Math.sin(rot + Math.PI / 2), 5, 0, 7); ctx.fill();
+  const stickX = cx - R * 0.2, stickY = cy;
+  ctx.strokeStyle = C.soft; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(stickX - R * 1.1, cy - R * 1.2); ctx.lineTo(stickX + R * 0.7, stickY + R * 0.55); ctx.stroke();
+  const dist = s4.t * PI * s4.d;
+  pill(ctx, '움직인 거리 ' + fmt(Math.round(dist * 100) / 100) + ' cm', Math.min(Math.max(cx, 110), W - 110), 20, C.diam, '#fff', 14);
+});
+function f4(){
+  const c = r2(s4.d * PI);
+  $('f4').innerHTML = '<div><span class="k">원주</span> = 지름 × 원주율</div><div>= ' + s4.d + ' × 3.14 = <b>' + fmt(c) + ' cm</b></div>' +
+    '<div style="margin-top:6px"><span class="k">움직인 거리</span> = 원주 × 바퀴 수</div><div>= ' + fmt(c) + ' × ' + s4.n + ' = <b>' + fmt(c * s4.n) + ' cm</b></div>';
+}
+$('r4').addEventListener('input', e => { s4.d = +e.target.value; $('r4v').textContent = s4.d; s4.t = 0; c4.draw(); f4(); });
+$('n4').addEventListener('input', e => { s4.n = +e.target.value; $('n4v').textContent = s4.n; s4.t = 0; c4.draw(); f4(); });
+$('roll4').addEventListener('click', () => {
+  if (s4.busy) return; s4.busy = true; $('roll4').disabled = true;
+  animate(1600 * s4.n, p => { s4.t = p * s4.n; c4.draw(); }, () => { s4.busy = false; $('roll4').disabled = false; });
+});
+$('reset4').addEventListener('click', () => { s4.t = 0; c4.draw(); });
+f4();
+let first4d = true;
+function new4(){
+  const m = s4.mode; let q;
+  if (m === 'c') { const d = rnd(3, 40); q = { t: '지름이 ' + d + ' cm인 원의 원주는 몇 cm일까요?', a: r2(d * PI), s: d + ' × 3.14 = ' + fmt(d * PI) }; }
+  else if (m === 'r') { const r = rnd(2, 20); q = { t: '반지름이 ' + r + ' cm인 원의 원주는 몇 cm일까요?', a: r2(r * 2 * PI), s: r + ' × 2 × 3.14 = ' + fmt(r * 2 * PI) }; }
+  else {
+    const d = first4d ? 29 : rnd(5, 60); first4d = false;
+    const c = r2(d * PI);
+    q = { t: (d === 29 ? '전통 가옥 기둥의 둘레가 ' : '원주가 ') + fmt(c) + ' cm일 때, 지름은 몇 cm일까요?', a: d, s: fmt(c) + ' ÷ 3.14 = ' + d };
+  }
+  s4.q = q; $('q4').textContent = q.t; $('a4').value = ''; $('a4').dataset.tries = 0; $('a4f').textContent = '';
+}
+$('mode4').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  [...$('mode4').children].forEach(x => x.classList.toggle('on', x === b)); s4.mode = b.dataset.m; new4();
+});
+$('chk4').addEventListener('click', () => check($('a4'), $('a4f'), s4.q.a, s4.q.s));
+$('new4').addEventListener('click', new4);
+new4();
+
+/* =========================================================
+   5차시 : 원의 넓이 어림하기
+   ========================================================= */
+const s5 = { r: 6, inner: true, outer: true, cells: false, manual: false, marks: new Set() };
+function cellInfo(r){
+  let full = 0, part = 0;
+  for (let i = -r; i < r; i++) for (let j = -r; j < r; j++) {
+    const fx = Math.max(Math.abs(i), Math.abs(i + 1)), fy = Math.max(Math.abs(j), Math.abs(j + 1));
+    const nx = (i <= 0 && i + 1 >= 0) ? 0 : Math.min(Math.abs(i), Math.abs(i + 1));
+    const ny = (j <= 0 && j + 1 >= 0) ? 0 : Math.min(Math.abs(j), Math.abs(j + 1));
+    if (fx * fx + fy * fy <= r * r) full++; else if (nx * nx + ny * ny < r * r) part++;
+  }
+  return { full, part };
+}
+function cellType(i, j, r){
+  const fx = Math.max(Math.abs(i), Math.abs(i + 1)), fy = Math.max(Math.abs(j), Math.abs(j + 1));
+  const nx = (i <= 0 && i + 1 >= 0) ? 0 : Math.min(Math.abs(i), Math.abs(i + 1));
+  const ny = (j <= 0 && j + 1 >= 0) ? 0 : Math.min(Math.abs(j), Math.abs(j + 1));
+  return fx * fx + fy * fy <= r * r ? 2 : nx * nx + ny * ny < r * r ? 1 : 0;
+}
+const c5 = makeCanvas('c5', 1, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const r = s5.r, u = Math.min(W, H) / (2 * r + 3), cx = W / 2, cy = H / 2;
+  o.u = u; o.cx = cx; o.cy = cy;
+  const ni = Math.ceil(cx / u) + 1, nj = Math.ceil(cy / u) + 1;
+  for (let i = -ni; i < ni; i++) for (let j = -nj; j < nj; j++) {
+    const x = cx + i * u, y = cy + j * u;
+    if (s5.cells && i >= -r && i < r && j >= -r && j < r) {
+      const t = cellType(i, j, r);
+      if (t === 2) { ctx.fillStyle = C.circle; ctx.globalAlpha = .35; ctx.fillRect(x, y, u, u); }
+      else if (t === 1) { ctx.fillStyle = C.diam; ctx.globalAlpha = .25; ctx.fillRect(x, y, u, u); }
+      ctx.globalAlpha = 1;
+    }
+    if (s5.marks.has(i + ',' + j)) { ctx.fillStyle = C.gold; ctx.globalAlpha = .55; ctx.fillRect(x + 2, y + 2, u - 4, u - 4); ctx.globalAlpha = 1; }
+  }
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+  for (let i = -ni; i <= ni; i++) { ctx.beginPath(); ctx.moveTo(cx + i * u, 0); ctx.lineTo(cx + i * u, H); ctx.stroke(); }
+  for (let j = -nj; j <= nj; j++) { ctx.beginPath(); ctx.moveTo(0, cy + j * u); ctx.lineTo(W, cy + j * u); ctx.stroke(); }
+  const R = r * u;
+  if (s5.outer) { ctx.strokeStyle = C.diam; ctx.lineWidth = 3; ctx.strokeRect(cx - R, cy - R, 2 * R, 2 * R); }
+  if (s5.inner) {
+    ctx.strokeStyle = C.good; ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(cx, cy - R); ctx.lineTo(cx + R, cy); ctx.lineTo(cx, cy + R); ctx.lineTo(cx - R, cy); ctx.closePath(); ctx.stroke();
+  }
+  ctx.strokeStyle = C.rad; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R, cy); ctx.stroke(); ctx.setLineDash([]);
+  pill(ctx, r + ' cm', cx + R / 2, cy - 14, C.ink, C.card);
+});
+function stat5(){
+  const r = s5.r, { full, part } = cellInfo(r);
+  let h = '';
+  if (s5.inner) h += '<dt>안쪽 정사각형</dt><dd>' + (2 * r * r) + ' cm²</dd>';
+  if (s5.outer) h += '<dt>바깥 정사각형</dt><dd>' + (4 * r * r) + ' cm²</dd>';
+  if (s5.inner && s5.outer) h += '<dt>→ 원의 넓이는</dt><dd>' + (2 * r * r) + ' 와 ' + (4 * r * r) + ' 사이</dd>';
+  if (s5.cells) h += '<dt>원 안의 모눈 (초록)</dt><dd>' + full + '칸</dd><dt>원에 걸친 모눈까지</dt><dd>' + (full + part) + '칸</dd><dt>→ 원의 넓이는</dt><dd>' + full + ' 와 ' + (full + part) + ' 사이</dd>';
+  h += '<dt>실제 넓이 (반지름×반지름×3.14)</dt><dd><b>' + fmt(r * r * PI) + ' cm²</b></dd>';
+  $('s5').innerHTML = h;
+  $('m5').textContent = s5.manual ? '내가 표시한 칸: ' + s5.marks.size + '칸' : '';
+  $('m5').className = 'fb';
+}
+$('r5').addEventListener('input', e => { s5.r = +e.target.value; $('r5v').textContent = s5.r; s5.marks.clear(); c5.draw(); stat5(); });
+$('t5').addEventListener('change', e => { s5[e.target.dataset.k] = e.target.checked; c5.draw(); stat5(); });
+c5.cv.addEventListener('pointerdown', e => {
+  if (!s5.manual) return; const p = pos(e, c5.cv);
+  const i = Math.floor((p.x - c5.cx) / c5.u), j = Math.floor((p.y - c5.cy) / c5.u), k = i + ',' + j;
+  s5.marks.has(k) ? s5.marks.delete(k) : s5.marks.add(k); c5.draw(); stat5();
+});
+stat5();
+
+/* =========================================================
+   6차시 : 원의 넓이 구하기 (잘라서 펼치기)
+   ========================================================= */
+const N6 = [4, 8, 16, 32, 48, 64];
+const s6 = { n: 16, u: 0, stop: null, q: null };
+const c6 = makeCanvas('c6', 0.62, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const n = s6.n, th = 2 * Math.PI / n, t = ease(s6.u);
+  const R = Math.min((W - 60) / (Math.PI + 0.7), (H - 70) / 2);
+  const w = 2 * R * Math.sin(th / 2), totalW = (n / 2 + 0.5) * w;
+  const X0 = W / 2 - totalW / 2, Ytop = H / 2 - R * Math.cos(th / 2) / 2 - 8;
+  const cx = W / 2, cy = H / 2 - 8;
+  for (let i = 0; i < n; i++) {
+    const a0 = -Math.PI + (i + 0.5) * th;
+    let tx, ty, ta;
+    if (i < n / 2) { tx = X0 + (i + 1) * w; ty = Ytop + R * Math.cos(th / 2); ta = -Math.PI / 2; }
+    else { const k = n - 1 - i; tx = X0 + (k + 0.5) * w; ty = Ytop; ta = Math.PI / 2; }
+    let da = ta - a0; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+    const px = cx + (tx - cx) * t, py = cy + (ty - cy) * t, a = a0 + da * t;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.arc(px, py, R, a - th / 2, a + th / 2); ctx.closePath();
+    ctx.fillStyle = i < n / 2 ? C.circle : C.gold; ctx.globalAlpha = i % 2 ? .78 : .95; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = C.card; ctx.lineWidth = n > 32 ? .8 : 1.5; ctx.stroke();
+  }
+  if (s6.u > 0.97) {
+    const yb = Ytop + R * Math.cos(th / 2) + 18, xl = X0 + w / 2, xr = X0 + (n / 2 + 0.5) * w - w / 2;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xl, yb - 6); ctx.lineTo(xl, yb); ctx.lineTo(xr, yb); ctx.lineTo(xr, yb - 6); ctx.stroke();
+    pill(ctx, '가로 ≈ 원주 × ½', (xl + xr) / 2, yb + 16, C.ink, C.card, 14);
+    const xs = X0 - 14;
+    ctx.beginPath(); ctx.moveTo(xs + 6, Ytop); ctx.lineTo(xs, Ytop); ctx.lineTo(xs, Ytop + R * Math.cos(th / 2)); ctx.lineTo(xs + 6, Ytop + R * Math.cos(th / 2)); ctx.stroke();
+    ctx.save(); ctx.translate(xs - 16, Ytop + R * Math.cos(th / 2) / 2); ctx.rotate(-Math.PI / 2); pill(ctx, '세로 = 반지름', 0, 0, C.rad, '#fff', 13); ctx.restore();
+  } else if (s6.u < 0.02) {
+    ctx.strokeStyle = C.rad; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R, cy); ctx.stroke();
+    pill(ctx, '반지름', cx + R / 2, cy + 16, C.rad, '#fff');
+  }
+});
+function set6u(v){ s6.u = v; $('u6').value = Math.round(v * 100); $('u6v').textContent = Math.round(v * 100); c6.draw(); }
+$('n6').addEventListener('input', e => { s6.n = N6[+e.target.value]; $('n6v').textContent = s6.n; c6.draw(); });
+$('u6').addEventListener('input', e => { if (s6.stop) s6.stop(); set6u(+e.target.value / 100); });
+$('play6').addEventListener('click', () => { if (s6.stop) s6.stop(); const from = s6.u; s6.stop = animate(2200 * (1 - from) + 200, p => set6u(from + (1 - from) * p)); });
+$('back6').addEventListener('click', () => { if (s6.stop) s6.stop(); const from = s6.u; s6.stop = animate(1200 * from + 200, p => set6u(from * (1 - p))); });
+$('chk6').addEventListener('click', () => {
+  const w = $('a6w').value, h = $('a6h').value, f = $('a6f');
+  if (w === 'h' && h === 'r') { f.className = 'fb ok'; f.textContent = '정답! 원의 넓이 = (원주 × ½) × 반지름 = 반지름 × 반지름 × 원주율'; }
+  else { f.className = 'fb no'; f.textContent = (w !== 'h' ? '가로에는 원주의 절반이 펼쳐져 있어요. ' : '') + (h !== 'r' ? '세로는 조각의 꼭짓점에서 둘레까지예요.' : ''); }
+});
+function f6(){
+  const r = parseFloat($('in6').value);
+  if (!(r > 0)) { $('f6').textContent = '반지름을 입력하세요.'; return; }
+  $('f6').innerHTML = '<div><span class="k">원의 넓이</span> = (원주 × ½) × 반지름</div>' +
+    '<div>= (' + fmt(r) + ' × 2 × 3.14 × ½) × ' + fmt(r) + '</div>' +
+    '<div>= ' + fmt(r) + ' × ' + fmt(r) + ' × 3.14</div><div>= <b>' + fmt(r * r * PI) + ' cm²</b></div>';
+}
+$('in6').addEventListener('input', f6); f6();
+let first6 = 0;
+function new6(){
+  let q;
+  const preset = [[16, 'r'], [42, 'd']][first6++];
+  if (preset) {
+    const [v, k] = preset;
+    q = k === 'r' ? { t: '반지름이 ' + v + ' cm인 원의 넓이는?', a: r2(v * v * PI), s: v + ' × ' + v + ' × 3.14 = ' + fmt(v * v * PI) }
+                  : { t: '지름이 ' + v + ' cm인 원의 넓이는?', a: r2(v * v / 4 * PI), s: '반지름 ' + v / 2 + ', ' + v / 2 + ' × ' + v / 2 + ' × 3.14 = ' + fmt(v * v / 4 * PI) };
+  } else if (Math.random() < .5) { const r = rnd(2, 25); q = { t: '반지름이 ' + r + ' cm인 원의 넓이는?', a: r2(r * r * PI), s: r + ' × ' + r + ' × 3.14 = ' + fmt(r * r * PI) }; }
+  else { const r = rnd(2, 20), d = 2 * r; q = { t: '지름이 ' + d + ' cm인 원의 넓이는?', a: r2(r * r * PI), s: '반지름은 ' + r + ' cm, ' + r + ' × ' + r + ' × 3.14 = ' + fmt(r * r * PI) }; }
+  s6.q = q; $('q6').textContent = q.t; $('a6').value = ''; $('a6').dataset.tries = 0; $('a6bf').textContent = '';
+}
+$('chk6b').addEventListener('click', () => check($('a6'), $('a6bf'), s6.q.a, s6.q.s));
+$('new6').addEventListener('click', new6); new6();
+
+/* =========================================================
+   7차시 : 여러 모양의 둘레와 넓이
+   ========================================================= */
+const SH = {
+  ring: { unit: 'm', p: { R: [10, 4, 14, '큰 원의 반지름'], r: [5, 1, 13, '작은 원의 반지름'] },
+    cap: '큰 원 안에 작은 원 모양의 연못이 있는 꽃밭이에요.',
+    calc: p => ({ per: r2(2 * p.R * PI + 2 * p.r * PI), area: r2(p.R * p.R * PI - p.r * p.r * PI),
+      sol: '둘레 = (' + p.R + ' × 2 × 3.14) + (' + p.r + ' × 2 × 3.14) = ' + fmt(2 * p.R * PI) + ' + ' + fmt(2 * p.r * PI) + ' = ' + fmt(2 * p.R * PI + 2 * p.r * PI) +
+           '<br>넓이 = (' + p.R + ' × ' + p.R + ' × 3.14) − (' + p.r + ' × ' + p.r + ' × 3.14) = ' + fmt(p.R * p.R * PI) + ' − ' + fmt(p.r * p.r * PI) + ' = ' + fmt(p.R * p.R * PI - p.r * p.r * PI) }) },
+  sq: { unit: 'cm', p: { a: [10, 4, 20, '정사각형의 한 변 (= 원의 지름)'] },
+    cap: '정사각형 안에 꼭 맞는 원을 오려 내고 남은 부분이에요.',
+    calc: p => ({ per: r2(4 * p.a + p.a * PI), area: r2(p.a * p.a - (p.a / 2) * (p.a / 2) * PI),
+      sol: '둘레 = (정사각형 둘레) + (원주) = ' + p.a + ' × 4 + ' + p.a + ' × 3.14 = ' + 4 * p.a + ' + ' + fmt(p.a * PI) + ' = ' + fmt(4 * p.a + p.a * PI) +
+           '<br>넓이 = (' + p.a + ' × ' + p.a + ') − (' + fmt(p.a / 2) + ' × ' + fmt(p.a / 2) + ' × 3.14) = ' + p.a * p.a + ' − ' + fmt(p.a * p.a / 4 * PI) + ' = ' + fmt(p.a * p.a - p.a * p.a / 4 * PI) }) },
+  track: { unit: 'm', p: { L: [30, 10, 60, '직선 부분의 길이'], D: [20, 6, 40, '반원의 지름'] },
+    cap: '직사각형 양쪽에 반원을 붙인 운동장 트랙 모양이에요.',
+    calc: p => ({ per: r2(2 * p.L + p.D * PI), area: r2(p.L * p.D + (p.D / 2) * (p.D / 2) * PI),
+      sol: '둘레 = (직선 2개) + (반원 2개 = 원 1개의 원주) = ' + p.L + ' × 2 + ' + p.D + ' × 3.14 = ' + fmt(2 * p.L) + ' + ' + fmt(p.D * PI) + ' = ' + fmt(2 * p.L + p.D * PI) +
+           '<br>넓이 = (직사각형) + (원 1개) = ' + p.L + ' × ' + p.D + ' + ' + fmt(p.D / 2) + ' × ' + fmt(p.D / 2) + ' × 3.14 = ' + fmt(p.L * p.D) + ' + ' + fmt(p.D * p.D / 4 * PI) + ' = ' + fmt(p.L * p.D + p.D * p.D / 4 * PI) }) }
+};
+const s7 = { s: 'ring', v: {} };
+Object.keys(SH).forEach(k => { s7.v[k] = {}; Object.entries(SH[k].p).forEach(([n, a]) => s7.v[k][n] = a[0]); });
+function ctrl7(){
+  const sh = SH[s7.s], v = s7.v[s7.s];
+  $('ctrl7').innerHTML = Object.entries(sh.p).map(([n, a]) =>
+    '<div class="ctrl"><label for="p7' + n + '">' + a[3] + ' <b><span id="p7' + n + 'v">' + v[n] + '</span> ' + sh.unit + '</b></label><input type="range" id="p7' + n + '" data-n="' + n + '" min="' + a[1] + '" max="' + a[2] + '" step="1" value="' + v[n] + '"></div>'
+  ).join('');
+  $('cap7').textContent = sh.cap; $('u7p').textContent = sh.unit; $('u7a').textContent = sh.unit + '²';
+  reset7();
+}
+function reset7(){ $('a7p').value = $('a7a').value = ''; $('a7f').textContent = ''; $('f7').hidden = true; }
+$('ctrl7').addEventListener('input', e => {
+  const n = e.target.dataset.n, v = s7.v[s7.s]; v[n] = +e.target.value;
+  if (s7.s === 'ring') { if (v.r >= v.R) { if (n === 'R') v.r = v.R - 1; else v.R = v.r + 1; } $('p7R').value = v.R; $('p7Rv').textContent = v.R; $('p7r').value = v.r; $('p7rv').textContent = v.r; }
+  else $('p7' + n + 'v').textContent = v[n];
+  reset7(); c7.draw();
+});
+$('shape7').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  [...$('shape7').children].forEach(x => x.classList.toggle('on', x === b)); s7.s = b.dataset.s; ctrl7(); c7.draw();
+});
+$('chk7').addEventListener('click', () => {
+  const res = SH[s7.s].calc(s7.v[s7.s]), p = parseFloat($('a7p').value), a = parseFloat($('a7a').value), f = $('a7f');
+  const okP = near(p, res.per), okA = near(a, res.area);
+  f.className = 'fb ' + (okP && okA ? 'ok' : 'no');
+  f.textContent = okP && okA ? '둘 다 정답이에요!' : (okP ? '둘레 정답! ' : '둘레를 다시 구해 봐요. ') + (okA ? '넓이 정답!' : '넓이를 다시 구해 봐요.');
+});
+$('sol7').addEventListener('click', () => { const r = SH[s7.s].calc(s7.v[s7.s]); $('f7').innerHTML = r.sol; $('f7').hidden = false; });
+const c7 = makeCanvas('c7', 0.72, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const v = s7.v[s7.s], unit = SH[s7.s].unit, cx = W / 2, cy = H / 2;
+  ctx.fillStyle = C.goldF; ctx.strokeStyle = C.gold; ctx.lineWidth = 3;
+  if (s7.s === 'ring') {
+    const u = Math.min(W, H) * 0.44 / v.R, R = v.R * u, r = v.r * u;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.moveTo(cx + r, cy); ctx.arc(cx, cy, r, 0, 7, true);
+    ctx.fillStyle = C.circle; ctx.globalAlpha = .45; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = C.circle; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - r * 0.7071, cy - r * 0.7071); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 7); ctx.fill();
+    pill(ctx, v.R + ' ' + unit, cx + (r + R) / 2, cy + 15, C.ink, C.card);
+    pill(ctx, v.r + ' ' + unit, cx - r * 0.35 - 18, cy - r * 0.35 - 8, C.ink, C.card);
+  } else if (s7.s === 'sq') {
+    const u = Math.min(W, H) * 0.8 / v.a, A = v.a * u;
+    ctx.beginPath(); ctx.rect(cx - A / 2, cy - A / 2, A, A); ctx.moveTo(cx + A / 2, cy); ctx.arc(cx, cy, A / 2, 0, 7, true);
+    ctx.fillStyle = C.circle; ctx.globalAlpha = .45; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = C.circle; ctx.strokeRect(cx - A / 2, cy - A / 2, A, A); ctx.beginPath(); ctx.arc(cx, cy, A / 2, 0, 7); ctx.stroke();
+    pill(ctx, v.a + ' ' + unit, cx, cy - A / 2 - 14 < 10 ? cy - A / 2 + 14 : cy - A / 2 - 12, C.ink, C.card);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(cx - A / 2, cy); ctx.lineTo(cx + A / 2, cy); ctx.stroke(); ctx.setLineDash([]);
+    pill(ctx, '지름 ' + v.a + ' ' + unit, cx, cy + 15, C.ink, C.card);
+  } else {
+    const u = Math.min((W - 30) / (v.L + v.D), (H - 40) / v.D), L = v.L * u, D = v.D * u;
+    ctx.beginPath(); ctx.moveTo(cx - L / 2, cy - D / 2); ctx.lineTo(cx + L / 2, cy - D / 2);
+    ctx.arc(cx + L / 2, cy, D / 2, -Math.PI / 2, Math.PI / 2); ctx.lineTo(cx - L / 2, cy + D / 2);
+    ctx.arc(cx - L / 2, cy, D / 2, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
+    ctx.fillStyle = C.circle; ctx.globalAlpha = .45; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = C.circle; ctx.stroke();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(cx - L / 2, cy - D / 2); ctx.lineTo(cx - L / 2, cy + D / 2); ctx.moveTo(cx + L / 2, cy - D / 2); ctx.lineTo(cx + L / 2, cy + D / 2); ctx.stroke(); ctx.setLineDash([]);
+    pill(ctx, v.L + ' ' + unit, cx, cy - D / 2 + 16, C.ink, C.card);
+    pill(ctx, '지름 ' + v.D + ' ' + unit, cx + L / 2, cy, C.ink, C.card);
+  }
+});
+ctrl7();
+
+/* =========================================================
+   8차시 : 내 행성을 찾아라!
+   ========================================================= */
+const PCOL = ['#FF6B5E', '#4D8DFF', '#FFC233', '#B477FF'];
+const PNAME = ['빨강', '파랑', '노랑', '보라'];
+const WW = 1000, WH = 640, LX = 500, LY = 590;
+const s8 = { np: 2, turn: 0, score: [], planets: [], comet: { x: LX, y: LY, vx: 0, vy: 0 }, state: 'setup', aim: null, stars: [] };
+for (let i = 0; i < 90; i++) s8.stars.push([Math.random() * WW, Math.random() * WH, Math.random() * 1.6 + .3]);
+const PLHUE = ['#5B6CB8', '#3E8F8A', '#8A5BA8', '#B0705A', '#4F7FA6', '#7C8A3E', '#A65B78', '#5A8F5B', '#9A7B45'];
+function genPlanets(){
+  const ps = []; let guard = 0;
+  while (ps.length < 9 && guard++ < 4000) {
+    const r = rnd(52, 78), x = rnd(r + 10, WW - r - 10), y = rnd(r + 10, 470 - r);
+    if (ps.some(p => Math.hypot(p.x - x, p.y - y) < p.r + r + 14)) continue;
+    const ask = Math.random() < .5 ? '원주' : '넓이', given = Math.random() < .5 ? '반지름' : '지름';
+    const val = given === '반지름' ? rnd(2, 12) : rnd(2, 10) * 2;
+    const rr = given === '반지름' ? val : val / 2;
+    const ans = ask === '원주' ? r2(rr * 2 * PI) : r2(rr * rr * PI);
+    const sol = ask === '원주' ? (given === '지름' ? val + ' × 3.14' : val + ' × 2 × 3.14') + ' = ' + fmt(ans) : (given === '지름' ? '반지름 ' + rr + ', ' : '') + rr + ' × ' + rr + ' × 3.14 = ' + fmt(ans);
+    ps.push({ x, y, r, ask, given, val, ans, sol, owner: -1, hue: PLHUE[ps.length], ring: Math.random() < .35 });
+  }
+  return ps;
+}
+const c8 = makeCanvas('c8', WH / WW, o => {
+  const { ctx, W, H } = o, k = W / WW;
+  ctx.save(); ctx.scale(k, k);
+  const g = ctx.createLinearGradient(0, 0, 0, WH); g.addColorStop(0, '#0B1030'); g.addColorStop(1, '#1A1446');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, WW, WH);
+  s8.stars.forEach(([x, y, r]) => { ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); });
+  s8.planets.forEach(p => {
+    const col = p.owner >= 0 ? PCOL[p.owner] : p.hue;
+    if (p.ring) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(p.x, p.y, p.r * 1.35, p.r * .38, -.3, 0, 7); ctx.stroke(); }
+    const pg = ctx.createRadialGradient(p.x - p.r * .35, p.y - p.r * .35, p.r * .1, p.x, p.y, p.r);
+    pg.addColorStop(0, 'rgba(255,255,255,.55)'); pg.addColorStop(.25, col); pg.addColorStop(1, col);
+    ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+    if (p.owner >= 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke(); }
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '700 19px "Gowun Dodum","Malgun Gothic",sans-serif'; ctx.fillText(p.given + ' ' + p.val + 'cm', p.x, p.y - 11);
+    ctx.font = '22px "Jua","Malgun Gothic",sans-serif'; ctx.fillText(p.owner >= 0 ? '★ ' + PNAME[p.owner] : p.ask + '?', p.x, p.y + 15);
+  });
+  ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.setLineDash([8, 8]);
+  ctx.beginPath(); ctx.arc(LX, LY, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+  const cm = s8.comet;
+  if (s8.aim) {
+    const dx = s8.aim.x - LX, dy = s8.aim.y - LY, len = Math.min(200, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(LX, LY); ctx.lineTo(LX + Math.cos(a) * len, LY + Math.sin(a) * len); ctx.stroke();
+    ctx.strokeStyle = PCOL[s8.turn]; ctx.lineWidth = 4; ctx.setLineDash([10, 8]);
+    ctx.beginPath(); ctx.moveTo(LX, LY); ctx.lineTo(LX - Math.cos(a) * len * 1.6, LY - Math.sin(a) * len * 1.6); ctx.stroke(); ctx.setLineDash([]);
+  }
+  const sp = Math.hypot(cm.vx, cm.vy);
+  if (sp > 1) {
+    const tg = ctx.createLinearGradient(cm.x, cm.y, cm.x - cm.vx * 6, cm.y - cm.vy * 6);
+    tg.addColorStop(0, PCOL[s8.turn]); tg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = tg; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cm.x, cm.y); ctx.lineTo(cm.x - cm.vx * 6, cm.y - cm.vy * 6); ctx.stroke(); ctx.lineCap = 'butt';
+  }
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cm.x, cm.y, 14, 0, 7); ctx.fill();
+  ctx.fillStyle = PCOL[s8.turn] || '#fff'; ctx.beginPath(); ctx.arc(cm.x, cm.y, 9, 0, 7); ctx.fill();
+  ctx.restore();
+});
+function wpos(e){ const p = pos(e, c8.cv), k = WW / c8.W; return { x: p.x * k, y: p.y * k }; }
+c8.cv.addEventListener('pointerdown', e => {
+  if (s8.state !== 'aim') return; const p = wpos(e);
+  if (Math.hypot(p.x - LX, p.y - LY) < 70) { s8.aim = p; try { c8.cv.setPointerCapture(e.pointerId); } catch (_) {} c8.draw(); }
+});
+c8.cv.addEventListener('pointermove', e => { if (s8.aim) { s8.aim = wpos(e); c8.draw(); } });
+c8.cv.addEventListener('pointerup', () => {
+  if (!s8.aim) return;
+  const dx = s8.aim.x - LX, dy = s8.aim.y - LY, len = Math.min(200, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+  s8.aim = null;
+  if (len < 15) { c8.draw(); return; }
+  s8.comet.vx = -Math.cos(a) * len * 0.13; s8.comet.vy = -Math.sin(a) * len * 0.13; s8.state = 'fly'; fly8();
+});
+function fly8(){
+  const cm = s8.comet; let last = performance.now();
+  function step(now){
+    const dt = Math.min(3, (now - last) / 16.67); last = now;
+    for (let i = 0; i < 2; i++) {
+      cm.x += cm.vx * dt / 2; cm.y += cm.vy * dt / 2;
+      if (cm.x < 14) { cm.x = 14; cm.vx = -cm.vx * .7; } if (cm.x > WW - 14) { cm.x = WW - 14; cm.vx = -cm.vx * .7; }
+      if (cm.y < 14) { cm.y = 14; cm.vy = -cm.vy * .7; } if (cm.y > WH - 14) { cm.y = WH - 14; cm.vy = -cm.vy * .7; }
+    }
+    const f = Math.pow(0.982, dt); cm.vx *= f; cm.vy *= f;
+    c8.draw();
+    if (Math.hypot(cm.vx, cm.vy) > 0.12) requestAnimationFrame(step); else { cm.vx = cm.vy = 0; land8(); }
+  }
+  requestAnimationFrame(step);
+}
+function land8(){
+  const cm = s8.comet, p = s8.planets.find(p => Math.hypot(p.x - cm.x, p.y - cm.y) < p.r);
+  if (!p) { msg8('빈 우주에 멈췄어요. 다음 사람 차례!'); nextTurn8(); return; }
+  if (p.owner >= 0) { msg8('이미 ' + PNAME[p.owner] + '이(가) 칠한 행성이에요. 다음 사람 차례!'); nextTurn8(); return; }
+  s8.state = 'quiz';
+  overlay8('<h4 style="color:' + PCOL[s8.turn] + '">' + PNAME[s8.turn] + ' 차례 · 행성 도착!</h4>' +
+    '<p class="quiz-q" style="margin:0">' + p.given + '이 <b>' + p.val + ' cm</b>인 원의 <b>' + p.ask + '</b>는 몇 ' + (p.ask === '넓이' ? 'cm²' : 'cm') + '일까요?</p>' +
+    '<div class="ans"><input id="g8" type="number" inputmode="decimal" step="any" aria-label="답"><span>' + (p.ask === '넓이' ? 'cm²' : 'cm') + '</span><button class="btn" id="g8b">확인</button></div><div class="fb" id="g8f"></div>');
+  const inp = $('g8'); inp.focus();
+  const go = () => {
+    const v = parseFloat(inp.value); if (isNaN(v)) return;
+    const ok = near(v, p.ans);
+    if (ok) { p.owner = s8.turn; s8.score[s8.turn]++; }
+    $('ovbox8').innerHTML = '<h4 style="color:' + (ok ? 'var(--good)' : 'var(--bad)') + '">' + (ok ? '정답! 행성을 칠했어요' : '아쉬워요') + '</h4><p style="margin:0" class="num">' + p.sol + '</p><button class="btn" id="g8n">다음 차례</button>';
+    $('g8n').addEventListener('click', () => { $('ov8').hidden = true; if (s8.planets.every(q => q.owner >= 0)) end8(); else nextTurn8(); });
+    $('g8n').focus(); c8.draw(); players8();
+  };
+  $('g8b').addEventListener('click', go);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); go(); } });
+}
+function overlay8(html){ $('ovbox8').innerHTML = html; $('ov8').hidden = false; }
+function msg8(t){ $('msg8').textContent = t; }
+function nextTurn8(){
+  s8.turn = (s8.turn + 1) % s8.np; s8.comet = { x: LX, y: LY, vx: 0, vy: 0 }; s8.state = 'aim'; players8(); c8.draw();
+  if (!$('msg8').textContent.includes('차례')) msg8('');
+  setTimeout(() => msg8(PNAME[s8.turn] + ' 차례예요. 혜성을 뒤로 끌었다 놓으세요.'), $('msg8').textContent ? 1400 : 0);
+}
+function players8(){
+  $('pl8').innerHTML = s8.score.map((sc, i) => '<span class="pl' + (i === s8.turn && s8.state !== 'end' ? ' turn' : '') + '"><i style="background:' + PCOL[i] + '"></i>' + PNAME[i] + ' <b class="num">' + sc + '</b></span>').join('');
+}
+function end8(){
+  s8.state = 'end'; const best = Math.max(...s8.score), win = s8.score.map((s, i) => s === best ? PNAME[i] : null).filter(Boolean);
+  players8();
+  overlay8('<h4>모든 행성을 칠했어요!</h4><p class="quiz-q" style="margin:0">' + (win.length > 1 ? win.join(', ') + ' 공동 우승' : win[0] + ' 승리') + ' 🎉</p><button class="btn" id="g8r">다시 하기</button>');
+  $('g8r').addEventListener('click', setup8);
+}
+function setup8(){
+  s8.state = 'setup';
+  overlay8('<h4>내 행성을 찾아라!</h4><p style="margin:0">몇 명이 함께 하나요?</p><div class="chips" id="np8">' + [2, 3, 4].map(n => '<button data-n="' + n + '"' + (n === s8.np ? ' class="on"' : '') + '>' + n + '명</button>').join('') + '</div><button class="btn" id="go8">시작하기</button>');
+  $('np8').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s8.np = +b.dataset.n; [...$('np8').children].forEach(x => x.classList.toggle('on', x === b)); });
+  $('go8').addEventListener('click', () => {
+    s8.planets = genPlanets(); s8.score = Array(s8.np).fill(0); s8.turn = 0; s8.comet = { x: LX, y: LY, vx: 0, vy: 0 };
+    s8.state = 'aim'; $('ov8').hidden = true; players8(); msg8(PNAME[0] + ' 차례예요. 혜성을 뒤로 끌었다 놓으세요.'); c8.draw();
+  });
+}
+$('new8').addEventListener('click', setup8);
+s8.planets = genPlanets(); s8.score = [0, 0]; players8(); setup8();
+
+/* =========================================================
+   9차시 : 어떤 떡을 고를까?
+   ========================================================= */
+const c9 = makeCanvas('c9', 0.55, o => {
+  const { ctx, W, H } = o; ctx.clearRect(0, 0, W, H);
+  const d = +$('d9').value, s = +$('s9').value, u = Math.min((W - 60) / 60, (H - 60) / 30);
+  const cx1 = W * 0.27, cx2 = W * 0.73, cy = H / 2 - 8;
+  const cake = (draw) => { ctx.fillStyle = '#C98A5B'; ctx.strokeStyle = '#7A4B2A'; ctx.lineWidth = 2; draw(); ctx.fill(); ctx.stroke(); };
+  cake(() => { ctx.beginPath(); ctx.arc(cx1, cy, d / 2 * u, 0, 7); });
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < 40; i++) { const a = i * 2.4, rr = Math.sqrt(i / 40) * d / 2 * u * .9; ctx.beginPath(); ctx.arc(cx1 + Math.cos(a) * rr, cy + Math.sin(a) * rr, 2.2, 0, 7); ctx.fill(); }
+  cake(() => { ctx.beginPath(); ctx.rect(cx2 - s / 2 * u, cy - s / 2 * u, s * u, s * u); });
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(cx2 - s / 2 * u + ((i * 37) % 97) / 97 * s * u, cy - s / 2 * u + ((i * 61) % 89) / 89 * s * u, 2.2, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(cx1 - d / 2 * u, cy); ctx.lineTo(cx1 + d / 2 * u, cy); ctx.stroke(); ctx.setLineDash([]);
+  pill(ctx, '지름 ' + d + ' cm', cx1, cy + 15, C.ink, C.card);
+  pill(ctx, '한 변 ' + s + ' cm', cx2, cy + s / 2 * u + 16 > H - 10 ? cy : cy + s / 2 * u + 16, C.ink, C.card);
+  txt(ctx, '원 모양', cx1, H - 12, C.soft, 14, 'center', '700'); txt(ctx, '정사각형 모양', cx2, H - 12, C.soft, 14, 'center', '700');
+});
+function calc9(){
+  const d = +$('d9').value, s = +$('s9').value, pa = +$('p9a').value || 0, pb = +$('p9b').value || 0;
+  $('d9v').textContent = d; $('s9v').textContent = s;
+  const A = r2((d / 2) * (d / 2) * PI), B = s * s, ua = pa / A, ub = pb / B;
+  $('tb9').innerHTML = '<tr><td>원 모양</td><td class="num">' + fmt(A) + '<br><small style="color:var(--soft)">' + fmt(d / 2) + '×' + fmt(d / 2) + '×3.14</small></td><td class="num">' + won(pa) + '</td><td class="num"><b>약 ' + ua.toFixed(1) + '원</b></td></tr>' +
+    '<tr><td>정사각형 모양</td><td class="num">' + B + '<br><small style="color:var(--soft)">' + s + '×' + s + '</small></td><td class="num">' + won(pb) + '</td><td class="num"><b>약 ' + ub.toFixed(1) + '원</b></td></tr>';
+  $('v9').textContent = !(pa && pb) ? '가격을 입력하세요.' : Math.abs(ua - ub) < 0.05 ? '두 떡의 1 cm²당 가격이 거의 같아요.' : (ua < ub ? '원 모양' : '정사각형 모양') + ' 시루떡이 더 저렴해요!';
+  c9.draw();
+}
+['d9', 's9', 'p9a', 'p9b'].forEach(id => $(id).addEventListener('input', calc9)); calc9();
+$('info9').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const ok = b.dataset.ok === '1'; b.classList.add(ok ? 'right' : 'wrong');
+  $('i9f').className = 'fb ' + (ok ? 'ok' : 'no');
+  $('i9f').textContent = ok ? '맞아요! 넓이를 구할 때 둘레는 필요 없어요.' : '이 정보는 가격을 구할 때 필요해요.';
+});
+
+/* =========================================================
+   10차시 : 단원 정리 퀴즈
+   ========================================================= */
+const GEN = [
+  () => { const d = rnd(4, 30); return { q: '지름이 ' + d + ' cm인 원의 원주는 몇 cm일까요?', a: r2(d * PI), u: 'cm', s: d + ' × 3.14 = ' + fmt(d * PI) }; },
+  () => { const r = rnd(3, 20); return { q: '반지름이 ' + r + ' cm인 원의 원주는 몇 cm일까요?', a: r2(r * 2 * PI), u: 'cm', s: r + ' × 2 × 3.14 = ' + fmt(r * 2 * PI) }; },
+  () => { const d = rnd(5, 40); return { q: '원주가 ' + fmt(d * PI) + ' cm인 원의 지름은 몇 cm일까요?', a: d, u: 'cm', s: fmt(d * PI) + ' ÷ 3.14 = ' + d }; },
+  () => { const r = rnd(3, 15); return { q: '반지름이 ' + r + ' cm인 원의 넓이는 몇 cm²일까요?', a: r2(r * r * PI), u: 'cm²', s: r + ' × ' + r + ' × 3.14 = ' + fmt(r * r * PI) }; },
+  () => { const r = rnd(2, 12); return { q: '지름이 ' + 2 * r + ' cm인 원의 넓이는 몇 cm²일까요?', a: r2(r * r * PI), u: 'cm²', s: '반지름 ' + r + ', ' + r + ' × ' + r + ' × 3.14 = ' + fmt(r * r * PI) }; },
+  () => { const r = rnd(2, 10); return { q: '넓이가 ' + fmt(r * r * PI) + ' cm²인 원의 반지름은 몇 cm일까요?', a: r, u: 'cm', s: '□ × □ × 3.14 = ' + fmt(r * r * PI) + ' → □ × □ = ' + r * r + ' → □ = ' + r }; },
+  () => { const R = rnd(6, 12), r = rnd(2, R - 2); return { q: '반지름이 ' + R + ' m인 원 모양 꽃밭 가운데에 반지름이 ' + r + ' m인 원 모양 연못이 있어요. 꽃밭의 넓이는 몇 m²일까요?', a: r2(R * R * PI - r * r * PI), u: 'm²', s: fmt(R * R * PI) + ' − ' + fmt(r * r * PI) + ' = ' + fmt(R * R * PI - r * r * PI) }; },
+  () => { const d = pick([40, 50, 60, 70]), n = pick([10, 20, 50, 100]); return { q: '바퀴의 지름이 ' + d + ' cm인 외발자전거가 곧게 ' + n + '바퀴 굴러갔어요. 이동한 거리는 몇 m일까요?', a: r2(d * PI * n / 100), u: 'm', s: d + ' × 3.14 × ' + n + ' = ' + fmt(d * PI * n) + ' cm = ' + fmt(d * PI * n / 100) + ' m' }; },
+  () => ({ q: '원을 한없이 잘라 이어 붙여 만든 직사각형의 가로는 원의 무엇과 같을까요?', ch: ['지름', '반지름', '원주 × ½', '원주'], a: 2, s: '가로 = 원주 × ½, 세로 = 반지름' }),
+  () => ({ q: '원주율에 대한 설명으로 옳은 것은?', ch: ['원이 클수록 원주율도 커진다.', '원주율은 원주 ÷ 지름이다.', '원주율은 정확히 3이다.', '원주율은 지름 ÷ 반지름이다.'], a: 1, s: '원주율 = 원주 ÷ 지름, 원의 크기와 상관없이 약 3.14' }),
+  () => { const r = rnd(4, 7), a = r * 2 - 1; const ac = r2(r * r * PI); return { q: '반지름이 ' + r + ' cm인 원과 한 변이 ' + a + ' cm인 정사각형 중 넓이가 더 넓은 것은?', ch: ['원', '정사각형'], a: ac > a * a ? 0 : 1, s: '원 ' + fmt(ac) + ' cm², 정사각형 ' + a * a + ' cm²' }; }
+];
+const s10 = { list: [], i: 0, score: 0, answered: false, best: null, rounds: 0 };
+try { const v = JSON.parse(localStorage.getItem('circle-lab-quiz') || 'null'); if (v) { s10.best = v.best; s10.rounds = v.rounds; } } catch (e) {}
+function start10(){
+  const idx = GEN.map((_, i) => i).sort(() => Math.random() - .5).slice(0, 10);
+  s10.list = idx.map(i => GEN[i]()); s10.i = 0; s10.score = 0; render10();
+}
+function render10(){
+  const el = $('quiz10'), n = s10.list.length;
+  if (s10.i >= n) {
+    s10.rounds++; s10.best = Math.max(s10.best || 0, s10.score);
+    try { localStorage.setItem('circle-lab-quiz', JSON.stringify({ best: s10.best, rounds: s10.rounds })); } catch (e) {}
+    el.innerHTML = '<h3>결과</h3><p class="quiz-q">10문제 중 <b class="num">' + s10.score + '</b>문제를 맞혔어요.</p><p>' +
+      (s10.score >= 9 ? '원의 둘레와 넓이 박사예요!' : s10.score >= 6 ? '잘했어요. 틀린 유형을 앞 차시에서 다시 살펴봐요.' : '앞 차시의 탐구 활동을 다시 해 보고 도전해 봐요.') +
+      '</p><button class="btn" id="re10">새 문제로 다시 풀기</button>';
+    $('re10').addEventListener('click', start10); rec10(); return;
+  }
+  const q = s10.list[s10.i]; s10.answered = false;
+  el.innerHTML = '<div class="row" style="justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">문제 ' + (s10.i + 1) + ' / ' + n + '</h3><span class="num">맞힌 수 ' + s10.score + '</span></div>' +
+    '<div class="progress" style="margin-bottom:14px"><div style="width:' + (s10.i / n * 100) + '%"></div></div>' +
+    '<p class="quiz-q" style="margin:0 0 12px">' + q.q + '</p>' +
+    (q.ch ? '<div class="choice" id="ch10">' + q.ch.map((c, i) => '<button data-i="' + i + '">' + c + '</button>').join('') + '</div>'
+          : '<div class="ans"><input id="in10" type="number" inputmode="decimal" step="any" aria-label="답"><span>' + q.u + '</span><button class="btn" id="ok10">확인</button></div>') +
+    '<div class="fb" id="fb10" style="margin-top:10px"></div><div class="row"><button class="btn ghost" id="nx10" hidden>다음 문제</button></div>';
+  const done = ok => {
+    s10.answered = true; if (ok) s10.score++;
+    $('fb10').className = 'fb ' + (ok ? 'ok' : 'no'); $('fb10').textContent = (ok ? '정답! ' : '정답은 이렇게 구해요: ') + q.s;
+    $('nx10').hidden = false; $('nx10').focus();
+  };
+  if (q.ch) $('ch10').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || s10.answered) return; const i = +b.dataset.i;
+    b.classList.add(i === q.a ? 'right' : 'wrong'); if (i !== q.a) $('ch10').children[q.a].classList.add('right'); done(i === q.a);
+  });
+  else {
+    const go = () => { if (s10.answered) return; const v = parseFloat($('in10').value); if (isNaN(v)) return; done(near(v, q.a)); };
+    $('ok10').addEventListener('click', go);
+    $('in10').addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); go(); } });
+  }
+  $('nx10').addEventListener('click', () => { s10.i++; render10(); });
+}
+function rec10(){ $('rec10').innerHTML = '<dt>푼 횟수</dt><dd>' + s10.rounds + '번</dd><dt>최고 기록</dt><dd>' + (s10.best == null ? '-' : s10.best + ' / 10') + '</dd>'; }
+start10(); rec10();
+
+/* ---------- 시작 ---------- */
+let startN = 1;
+const h = location.hash.match(/^#l(\d+)$/);
+if (h && +h[1] >= 1 && +h[1] <= 10) startN = +h[1];
+else { try { const v = +localStorage.getItem('circle-lab-lesson'); if (v >= 1 && v <= 10) startN = v; } catch (e) {} }
+show(startN, false);
+if (document.fonts) document.fonts.ready.then(redrawAll);
+})();
+</script>
